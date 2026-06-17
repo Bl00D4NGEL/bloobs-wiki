@@ -1,0 +1,1 @@
+## This repository contains helper scripts to contribute to the [Bloob's Adventure Idle Wiki](https://bloobsadventureidle.wiki.gg/)
