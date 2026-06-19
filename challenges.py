@@ -460,6 +460,18 @@ def main():
                 "Cape Of Ironfang": "Cape of Ironfang",
             }
         ),
+        "BowCrafting": lambda: ResourceFormatter(
+            {
+                "Arrows": "These challenges are progressed by successfully crafting the arrows listed in the challenge.",
+                "Bows": "These challenges are progressed by successfully crafting the bows listed in the challenge.",
+                "Shafts": "These challenges are progressed by successfully crafting the shafts listed in the challenge.",
+            },
+            {
+                "Arrows": "Arrow",
+                "Bows": "Bow",
+                "Shafts": "Shaft",
+            }
+        ),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
