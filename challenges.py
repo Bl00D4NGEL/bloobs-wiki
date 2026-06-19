@@ -206,6 +206,79 @@ class CookingFormatter(SkillFormatter):
             cells.append("No")
         return cells
 
+class DexterityFormatter(SkillFormatter):
+    def supports_category(self, category: str) -> bool:
+        return category in ["Bloobathon", "Movement"]
+
+    def get_description(self, category: str) -> str | None:
+        match category:
+            case "Bloobathon":
+                return "These challenges are progressed by completing bloobathons."
+            case "Movement":
+                return "These challenges are progressed by travelling in the world for the shown distance."
+            case _:
+                return None
+
+    def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
+        match category:
+            case "Bloobathon":
+                return ["Required Level", "Bloobathon", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+            case "Movement":
+                return ["Required Level", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+            case _:
+                return []
+
+    def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
+        match category:
+            case "Bloobathon":
+                return self.get_bloobathon_row_cells(challenges_by_id)
+            case "Movement":
+                return self.get_movement_row_cells(challenges_by_id)
+            case _:
+                return []
+
+    def get_bloobathon_row_cells(self, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
+        rows = []
+
+        for by_id in challenges_by_id.values():
+            cells = [f"Level {by_id[0].level_required}"]
+            challenge_name = by_id[0].challenge_name
+
+            # override because of inconsistent challenge data
+            if challenge_name == "Frostspire Bloobathon":
+                challenge_name = "Frostspire Cavern Bloobathon"
+
+            cells.append(f"[[File:{challenge_name.replace(" ", "_")}.png|32x32px]] [[{challenge_name}]]")
+
+            for challenge in by_id:
+                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
+
+            if by_id[0].repeatable:
+                cells.append("Yes")
+            else:
+                cells.append("No")
+
+            rows.append(cells)
+
+        return rows
+
+    def get_movement_row_cells(self, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
+        rows = []
+
+        for by_id in challenges_by_id.values():
+            cells = [f"Level {by_id[0].level_required}"]
+            for challenge in by_id:
+                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
+
+            if by_id[0].repeatable:
+                cells.append("Yes")
+            else:
+                cells.append("No")
+
+            rows.append(cells)
+
+        return rows
+
 def print_challenges_for_skill(challenges: list[Challenge], skill: str, formatter: SkillFormatter) -> None:
     filtered = [challenge for challenge in challenges if challenge.skill == skill]
 
@@ -271,6 +344,7 @@ def main():
     supported_skills = {
         "Woodcutting": WoodcuttingFormatter,
         "Cooking": CookingFormatter,
+        "Dexterity": DexterityFormatter,
     }
 
     for [supported_skill, formatter] in supported_skills.items():
