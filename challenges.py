@@ -488,6 +488,57 @@ def main():
                 "Random Tier 0 Slate": "Imbued Omni Slate",
             }
         ),
+        "Firemaking": lambda: ResourceFormatter(
+            {
+                "Cores": "These challenges are progressed by successfully crafting the core listed in the challenge.",
+                "Logs": "These challenges are progressed by successfully burning the log listed in the challenge.",
+            },
+            {
+                "Cores": "Core",
+                "Logs": "Log",
+            },
+        ),
+        "Devotion": lambda: ResourceFormatter(
+            {
+                "Bones": "These challenges are progressed by successfully burying the item listed in the challenge.",
+                "Sacrifice": "These challenges are progressed by successfully sacrificing the item listed in the challenge.",
+            },
+            {
+                "Bones": "Item",
+                "Sacrifice": "Item",
+            },
+            resource_name_overrides={
+                "Pile Of Bones": "Pile of Bones",
+                "Scorched Pile Of Bones": "Scorched Pile of Bones",
+            }
+        ),
+        "Thieving": lambda: ResourceFormatter(
+            {
+                "Stall": "These challenges are progressed by successfully thieving from the stall listed in the challenge.",
+                "Pickpocket": "These challenges are progressed by successfully pickpocketing the NPC listed in the challenge.",
+                "Chests": "These challenges are progressed by successfully opening the chest listed in the challenge.",
+            },
+            {
+                "Stall": "Stall",
+                "Pickpocket": "NPC",
+                "Chests": "Chest",
+            },
+            resource_name_overrides={
+                "LumberStall": "Lumber Stall",
+                "Jeweled Tomb Chest": "Jeweled Tomb",
+            }
+        ),
+        "Tracking": lambda: ResourceFormatter(
+            {
+                "Tracking": "These challenges are progressed by successfully tracking the creature listed in the challenge.",
+            },
+            {
+                "Tracking": "Stall",
+            },
+            resource_name_overrides={
+                "ElderGlow Spider": "Elderglow Spider",
+            }
+        ),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
