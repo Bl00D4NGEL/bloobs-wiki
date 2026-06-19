@@ -173,6 +173,39 @@ class MiningFormatter(SkillFormatter):
 
         return rows
 
+class SimpleFormatter(SkillFormatter):
+    _descriptions: dict[str, str]
+
+    def __init__(self, descriptions: dict[str, str]) -> None:
+        super().__init__()
+        self._descriptions = descriptions
+
+    def supports_category(self, category: str) -> bool:
+        return category in self._descriptions
+
+    def get_description(self, category: str) -> str | None:
+        return self._descriptions[category]
+
+    def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
+        return ["Required Level", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+
+    def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
+        rows = []
+
+        for by_id in challenges_by_id.values():
+            cells = [f"Level {by_id[0].level_required}"]
+            for challenge in by_id:
+                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
+
+            if by_id[0].repeatable:
+                cells.append("Yes")
+            else:
+                cells.append("No")
+
+            rows.append(cells)
+
+        return rows
+
 class CookingFormatter(SkillFormatter):
     def supports_category(self, category: str) -> bool:
         return category in ['Fish', 'Meat', 'Other']
@@ -376,6 +409,11 @@ def main():
         "Cooking": CookingFormatter,
         "Dexterity": DexterityFormatter,
         "Mining": MiningFormatter,
+        "Hitpoints": lambda: SimpleFormatter({"Healing": "These challenges are progressed by restoring Health."}),
+        "Attack": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a melee attack."}),
+        "Strength": lambda: SimpleFormatter({"Damage": "These challenges are progressed by successfully dealing damage to enemies with a melee attack."}),
+        "Defence": lambda: SimpleFormatter({"Mitigation": "These challenges are progressed by successfully recuding damage from enemies."}),
+        "Ranged": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a ranged attack.", "Damage": "These challenges are progressed by successfully dealing damage to enemies with a ranged attack."}),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
