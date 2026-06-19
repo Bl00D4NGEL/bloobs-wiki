@@ -432,6 +432,7 @@ def main():
                 "Decanter Of Water": "Decanter of Water",
             }
         ),
+        "Fishing": lambda: ResourceFormatter({"Fish": "These challenges are progressed by successfully fishing the fish listed in the challenge."}, {"Fish": "Potion"}),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
