@@ -79,7 +79,7 @@ class SkillFormatter(ABC):
     """Abstract base class for formatting skill challenges."""
     
     @abstractmethod
-    def supports_category(self, category: str) -> bool:
+    def supported_categories(self) -> list[str]:
         pass
 
     @abstractmethod
@@ -105,8 +105,8 @@ class ResourceFormatter(SkillFormatter):
         self._resource_names = resource_names
         self._resource_image_dict = resource_image_dict
 
-    def supports_category(self, category: str) -> bool:
-        return category in self._descriptions
+    def supported_categories(self) -> list[str]:
+        return list(self._descriptions.keys())
 
     def get_description(self, category: str) -> str | None:
         return self._descriptions[category]
@@ -145,8 +145,8 @@ class SimpleFormatter(SkillFormatter):
         super().__init__()
         self._descriptions = descriptions
 
-    def supports_category(self, category: str) -> bool:
-        return category in self._descriptions
+    def supported_categories(self) -> list[str]:
+        return list(self._descriptions.keys())
 
     def get_description(self, category: str) -> str | None:
         return self._descriptions[category]
@@ -172,8 +172,8 @@ class SimpleFormatter(SkillFormatter):
         return rows
 
 class WoodcuttingFormatter(SkillFormatter):
-    def supports_category(self, category: str) -> bool:
-        return category == 'Trees'
+    def supported_categories(self) -> list[str]:
+        return ['Trees']
 
     def get_description(self, category: str) -> str | None:
         return "These challenges are progressed by successfully chopping the log from the tree listed in the challenge."
@@ -230,8 +230,8 @@ class WoodcuttingFormatter(SkillFormatter):
         return rows
 
 class DexterityFormatter(SkillFormatter):
-    def supports_category(self, category: str) -> bool:
-        return category in ["Bloobathon", "Movement"]
+    def supported_categories(self) -> list[str]:
+        return ["Bloobathon", "Movement"]
 
     def get_description(self, category: str) -> str | None:
         match category:
@@ -312,13 +312,13 @@ def print_challenges_for_skill(challenges: list[Challenge], skill: str, formatte
             grouped_by_category[x.category] = []
         grouped_by_category[x.category].append(x)
 
-    for by_category in grouped_by_category.values():
-        category = by_category[0].category
-        if formatter.supports_category(category) is False:
+    for category in formatter.supported_categories():
+        if category not in grouped_by_category:
+            print(f"WARN: supported category {category} not in grouped challenges for skill {skill}")
             continue
-
+        challenges = grouped_by_category[category]
         grouped_by_id: dict[str, list[Challenge]] = {}
-        for x in by_category:
+        for x in challenges:
             if x.challenge_id not in grouped_by_id:
                 grouped_by_id[x.challenge_id] = []
             grouped_by_id[x.challenge_id].append(x)
@@ -389,6 +389,22 @@ def main():
         "Defence": lambda: SimpleFormatter({"Mitigation": "These challenges are progressed by successfully recuding damage from enemies."}),
         "Ranged": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a ranged attack.", "Damage": "These challenges are progressed by successfully dealing damage to enemies with a ranged attack."}),
         "Foraging": lambda: ResourceFormatter({"Forage": "These challenges are progressed by successfully foraging the resource listed in the challenge."}, {"Forage": "Resource"}),
+        "Smithing": lambda: ResourceFormatter(
+            {
+                "Bars": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
+                "Tools": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
+                "Weapons": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
+                "Armour": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
+                "Other": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
+            },
+            {
+                "Bars": "Bar",
+                "Tools": "Tool",
+                "Weapons": "Weapon",
+                "Armour": "Armour",
+                "Other": "Other",
+            }
+        ),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
