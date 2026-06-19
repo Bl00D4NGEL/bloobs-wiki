@@ -98,12 +98,20 @@ class ResourceFormatter(SkillFormatter):
     _descriptions: dict[str, str]
     _resource_names: dict[str, str]
     _resource_image_dict: dict[str, str]
+    _resource_name_overrides: dict[str, str]
 
-    def __init__(self, descriptions: dict[str, str], resource_names: dict[str, str], resource_image_dict: dict[str, str] = {}) -> None:
+    def __init__(
+        self,
+        descriptions: dict[str, str],
+        resource_names: dict[str, str],
+        resource_image_dict: dict[str, str] = {},
+        resource_name_overrides: dict[str, str] = {}
+    ) -> None:
         super().__init__()
         self._descriptions = descriptions
         self._resource_names = resource_names
         self._resource_image_dict = resource_image_dict
+        self._resource_name_overrides = resource_name_overrides
 
     def supported_categories(self) -> list[str]:
         return list(self._descriptions.keys())
@@ -121,6 +129,9 @@ class ResourceFormatter(SkillFormatter):
             cells = [f"Level {by_id[0].level_required}"]
 
             resource_name = by_id[0].challenge_name
+            if resource_name in self._resource_name_overrides:
+                resource_name = self._resource_name_overrides[resource_name]
+
             if resource_name in self._resource_image_dict:
                 cells.append(format_image_cell(resource_name, self._resource_image_dict[resource_name]))
             else:
@@ -403,6 +414,22 @@ def main():
                 "Weapons": "Weapon",
                 "Armour": "Armour",
                 "Other": "Other",
+            }
+        ),
+        "Herbology": lambda: ResourceFormatter(
+            {
+                "Unfinished": "These challenges are progressed by successfully creating the unfinished potion listed in the challenge.",
+                "Potions": "These challenges are progressed by successfully creating the potion listed in the challenge.",
+            },
+            {
+                "Unfinished": "Potion",
+                "Potions": "Potion",
+            },
+            resource_name_overrides={
+                "Vial Of Water": "Vial of Water",
+                "Flask Of Water": "Flask of Water",
+                "Bottle Of Water": "Bottle of Water",
+                "Decanter Of Water": "Decanter of Water",
             }
         ),
     }
