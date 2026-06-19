@@ -66,6 +66,15 @@ def print_skills(challenges: list[Challenge]) -> None:
         print(f"• {category}")
     print(f"\nTotal skills found: {len(skills)}")
 
+def format_image_cell(content: str, image_link: str| None = None, linkable_content: bool = True) -> str:
+    if image_link is None:
+        image_link = content
+
+    if linkable_content:
+        return f"[[File:{image_link.replace(" ", "_")}.png|32x32px]] [[{content}]]"
+
+    return f"[[File:{image_link.replace(" ", "_")}.png|32x32px]] {content}"
+
 class SkillFormatter(ABC):
     """Abstract base class for formatting skill challenges."""
     
@@ -85,81 +94,37 @@ class SkillFormatter(ABC):
     def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
         pass
 
-class WoodcuttingFormatter(SkillFormatter):
+class ResourceFormatter(SkillFormatter):
+    _descriptions: dict[str, str]
+    _resource_names: dict[str, str]
+    _resource_image_dict: dict[str, str]
+
+    def __init__(self, descriptions: dict[str, str], resource_names: dict[str, str], resource_image_dict: dict[str, str] = {}) -> None:
+        super().__init__()
+        self._descriptions = descriptions
+        self._resource_names = resource_names
+        self._resource_image_dict = resource_image_dict
+
     def supports_category(self, category: str) -> bool:
-        return category == 'Trees'
+        return category in self._descriptions
 
     def get_description(self, category: str) -> str | None:
-        return "These challenges are progressed by successfully chopping the log from the tree listed in the challenge."
+        return self._descriptions[category]
 
     def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
-        return ["Required Level", "Tree", "Log", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
-    
-    def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
-        rows = []
-
-        # key = log name, value = tree name
-        log_to_tree_dict = {
-            "Logs": "Regular Tree",
-            "Imbued Fibers": "Imbued Tree",
-            "Oak Logs": "Oak Tree",
-            "Willow Logs": "Willow Tree",
-            "Teak Logs": "Teak Tree",
-            "Maple Logs": "Maple Tree",
-            "Acadia Logs": "Acadia Tree",
-            "Eucalyptus Logs": "Eucalyptus Tree",
-            "Rubra Logs": "Rubra Tree",
-            "Yew Logs": "Yew Tree",
-            "Red Maple Logs": "Red Maple Tree",
-            "Magic Logs": "Magic Tree",
-            "Lunarwood Logs": "Lunarwood Tree",
-            "Aether Core": "Aether Tree",
-            "Spicebough Logs": "Spicebough Tree",
-            "Bitterpine Logs": "Bitterpine Tree",
-            "Flourishing Aether Core": "Flourishing Aether Tree",
-            "Dune Logs": "Dune Thicket Tree",
-            "Suncoil Logs": "Suncoil Tree",
-        }
-
-        for by_id in challenges_by_id.values():
-            cells = [f"Level {by_id[0].level_required}"]
-            log_name = by_id[0].challenge_name
-            if log_name in log_to_tree_dict:
-                cells.append(f"[[File:{log_to_tree_dict[log_name].replace(" ", "_")}.png|32x32px]] {log_to_tree_dict[log_name]}")
-            else:
-                cells.append("???")
-
-            cells.append(f"[[File:{log_name.replace(" ", "_")}.png|32x32px]] [[{log_name}]]")
-
-            for challenge in by_id:
-                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-            if by_id[0].repeatable:
-                cells.append("Yes")
-            else:
-                cells.append("No")
-
-            rows.append(cells)
-
-        return rows
-
-class MiningFormatter(SkillFormatter):
-    def supports_category(self, category: str) -> bool:
-        return category == 'Ores'
-
-    def get_description(self, category: str) -> str | None:
-        return "These challenges are progressed by successfully mining the ore listed in the challenge."
-
-    def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
-        return ["Required Level", "Ore", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+        return ["Required Level", self._resource_names[category], "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
 
     def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
         rows = []
 
         for by_id in challenges_by_id.values():
             cells = [f"Level {by_id[0].level_required}"]
-            ore_name = by_id[0].challenge_name
-            cells.append(f"[[File:{ore_name.replace(" ", "_")}.png|32x32px]] [[{ore_name}]]")
+
+            resource_name = by_id[0].challenge_name
+            if resource_name in self._resource_image_dict:
+                cells.append(format_image_cell(resource_name, self._resource_image_dict[resource_name]))
+            else:
+                cells.append(format_image_cell(resource_name))
 
             for challenge in by_id:
                 cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
@@ -206,68 +171,63 @@ class SimpleFormatter(SkillFormatter):
 
         return rows
 
-class CookingFormatter(SkillFormatter):
+class WoodcuttingFormatter(SkillFormatter):
     def supports_category(self, category: str) -> bool:
-        return category in ['Fish', 'Meat', 'Other']
+        return category == 'Trees'
 
     def get_description(self, category: str) -> str | None:
-        food_name_dict = {
-            'Fish': "fish",
-            'Meat': "meat",
-            'Other': "food",
-        }
-        if category in food_name_dict:
-            return f"These challenges are progressed by successfully cooking the {food_name_dict[category]} listed in the challenge."
-        
-        return None
+        return "These challenges are progressed by successfully chopping the log from the tree listed in the challenge."
 
     def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
-        food_name_dict = {
-            'Fish': "Fish",
-            'Meat': "Meat",
-            'Other': "Food",
-        }
-        
-        if category in food_name_dict:
-            return ["Required Level", food_name_dict[category], "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
-        
-        return []
+        return ["Required Level", "Tree", "Log", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
     
     def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
-        match category:
-            case 'Fish':
-                handler = self.get_row_cells
-            case 'Meat':
-                handler = lambda challenges: self.get_row_cells(challenges, {
-                    "Chicken": "Chicken (Food)",
-                })
-            case 'Other':
-                handler = self.get_row_cells
-            case _:
-                return []
-
         rows = []
-        for challenges in challenges_by_id.values():
-            rows.append(handler(challenges))
-                
+
+        # key = log name, value = tree name
+        log_to_tree_dict = {
+            "Logs": "Regular Tree",
+            "Imbued Fibers": "Imbued Tree",
+            "Oak Logs": "Oak Tree",
+            "Willow Logs": "Willow Tree",
+            "Teak Logs": "Teak Tree",
+            "Maple Logs": "Maple Tree",
+            "Acadia Logs": "Acadia Tree",
+            "Eucalyptus Logs": "Eucalyptus Tree",
+            "Rubra Logs": "Rubra Tree",
+            "Yew Logs": "Yew Tree",
+            "Red Maple Logs": "Red Maple Tree",
+            "Magic Logs": "Magic Tree",
+            "Lunarwood Logs": "Lunarwood Tree",
+            "Aether Core": "Aether Tree",
+            "Spicebough Logs": "Spicebough Tree",
+            "Bitterpine Logs": "Bitterpine Tree",
+            "Flourishing Aether Core": "Flourishing Aether Tree",
+            "Dune Logs": "Dune Thicket Tree",
+            "Suncoil Logs": "Suncoil Tree",
+        }
+
+        for by_id in challenges_by_id.values():
+            cells = [f"Level {by_id[0].level_required}"]
+            log_name = by_id[0].challenge_name
+            if log_name in log_to_tree_dict:
+                cells.append(format_image_cell(log_to_tree_dict[log_name], None, False))
+            else:
+                cells.append("???")
+
+            cells.append(format_image_cell(log_name))
+
+            for challenge in by_id:
+                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
+
+            if by_id[0].repeatable:
+                cells.append("Yes")
+            else:
+                cells.append("No")
+
+            rows.append(cells)
+
         return rows
-    
-    def get_row_cells(self, challenges: list[Challenge], image_dict: Optional[dict[str, str]] = None) -> list[str]:
-        cells = [f"Level {challenges[0].level_required}"]
-        food_name = challenges[0].challenge_name
-        if image_dict is not None and food_name in image_dict:
-            cells.append(f"[[File:{image_dict[food_name].replace(" ", "_")}.png|32x32px]] [[{food_name}]]")
-        else:
-            cells.append(f"[[File:{food_name.replace(" ", "_")}.png|32x32px]] [[{food_name}]]")
-
-        for challenge in challenges:
-            cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-        if challenges[0].repeatable:
-            cells.append("Yes")
-        else:
-            cells.append("No")
-        return cells
 
 class DexterityFormatter(SkillFormatter):
     def supports_category(self, category: str) -> bool:
@@ -311,7 +271,7 @@ class DexterityFormatter(SkillFormatter):
             if challenge_name == "Frostspire Bloobathon":
                 challenge_name = "Frostspire Cavern Bloobathon"
 
-            cells.append(f"[[File:{challenge_name.replace(" ", "_")}.png|32x32px]] [[{challenge_name}]]")
+            cells.append(format_image_cell(challenge_name))
 
             for challenge in by_id:
                 cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
@@ -406,14 +366,29 @@ def main():
 
     supported_skills = {
         "Woodcutting": WoodcuttingFormatter,
-        "Cooking": CookingFormatter,
+        "Cooking": lambda: ResourceFormatter(
+            {
+                'Fish': "These challenges are progressed by successfully cooking the fish listed in the challenge.",
+                'Meat': "These challenges are progressed by successfully cooking the meat listed in the challenge.",
+                'Other': "These challenges are progressed by successfully cooking the food listed in the challenge.",
+            },
+            {
+                'Fish': "Fish",
+                'Meat': "Meat",
+                'Other': "Food",
+            },
+            {
+                "Chicken": "Chicken (Food)",
+            }
+        ),
         "Dexterity": DexterityFormatter,
-        "Mining": MiningFormatter,
+        "Mining": lambda: ResourceFormatter({"Ores": "These challenges are progressed by successfully mining the ore listed in the challenge."}, {"Ores": "Ore"}),
         "Hitpoints": lambda: SimpleFormatter({"Healing": "These challenges are progressed by restoring Health."}),
         "Attack": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a melee attack."}),
         "Strength": lambda: SimpleFormatter({"Damage": "These challenges are progressed by successfully dealing damage to enemies with a melee attack."}),
         "Defence": lambda: SimpleFormatter({"Mitigation": "These challenges are progressed by successfully recuding damage from enemies."}),
         "Ranged": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a ranged attack.", "Damage": "These challenges are progressed by successfully dealing damage to enemies with a ranged attack."}),
+        "Foraging": lambda: ResourceFormatter({"Forage": "These challenges are progressed by successfully foraging the resource listed in the challenge."}, {"Forage": "Resource"}),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
