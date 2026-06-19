@@ -433,6 +433,33 @@ def main():
             }
         ),
         "Fishing": lambda: ResourceFormatter({"Fish": "These challenges are progressed by successfully fishing the fish listed in the challenge."}, {"Fish": "Potion"}),
+        "Crafting": lambda: ResourceFormatter(
+            {
+                "Workbench": "These challenges are progressed by successfully crafting the item listed in the challenge.",
+                "Glass": "These challenges are progressed by successfully crafting the item listed in the challenge.",
+                "Pottery": "These challenges are progressed by successfully crafting the item listed in the challenge.",
+                "Jewellery": "These challenges are progressed by successfully crafting the item listed in the challenge.",
+                "Capes": "These challenges are progressed by successfully crafting the cape listed in the challenge.",
+                "Magic Gear": "These challenges are progressed by successfully crafting the item listed in the challenge.",
+                "Range Gear": "These challenges are progressed by successfully crafting the item listed in the challenge.",
+                "Other": "These challenges are progressed by successfully crafting the item listed in the challenge.",
+            },
+            {
+                "Workbench": "Item",
+                "Glass": "Glass",
+                "Pottery": "Item",
+                "Jewellery": "Item",
+                "Capes": "Cape",
+                "Magic Gear": "Item",
+                "Range Gear": "Item",
+                "Other": "Item",
+            },
+            resource_name_overrides={
+                "Cape Of Windmark": "Cape of Windmark",
+                "Cape Of Mistborn": "Cape of Mistborn",
+                "Cape Of Ironfang": "Cape of Ironfang",
+            }
+        ),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
