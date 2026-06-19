@@ -472,6 +472,22 @@ def main():
                 "Shafts": "Shaft",
             }
         ),
+        "Magic": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a magic attack.", "Damage": "These challenges are progressed by successfully dealing damage to enemies with a magic attack.", "Teleports": "These challenges are progressed by teleporting to the location listed in the challenge."}),
+        "Imbuing": lambda: ResourceFormatter(
+            {
+                "Imbued Slate": "These challenges are progressed by successfully crafting the imbued slate listed in the challenge.",
+                "Slates": "These challenges are progressed by successfully crafting the slate listed in the challenge.",
+                "Staffs": "These challenges are progressed by successfully crafting the staff listed in the challenge.",
+            },
+            {
+                "Imbued Slate": "Slate",
+                "Slates": "Slate",
+                "Staffs": "Staff",
+            },
+            resource_name_overrides={
+                "Random Tier 0 Slate": "Imbued Omni Slate",
+            }
+        ),
     }
 
     for [supported_skill, formatter] in supported_skills.items():
