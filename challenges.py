@@ -143,6 +143,36 @@ class WoodcuttingFormatter(SkillFormatter):
 
         return rows
 
+class MiningFormatter(SkillFormatter):
+    def supports_category(self, category: str) -> bool:
+        return category == 'Ores'
+
+    def get_description(self, category: str) -> str | None:
+        return "These challenges are progressed by successfully mining the ore listed in the challenge."
+
+    def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
+        return ["Required Level", "Ore", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+
+    def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
+        rows = []
+
+        for by_id in challenges_by_id.values():
+            cells = [f"Level {by_id[0].level_required}"]
+            ore_name = by_id[0].challenge_name
+            cells.append(f"[[File:{ore_name.replace(" ", "_")}.png|32x32px]] [[{ore_name}]]")
+
+            for challenge in by_id:
+                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
+
+            if by_id[0].repeatable:
+                cells.append("Yes")
+            else:
+                cells.append("No")
+
+            rows.append(cells)
+
+        return rows
+
 class CookingFormatter(SkillFormatter):
     def supports_category(self, category: str) -> bool:
         return category in ['Fish', 'Meat', 'Other']
@@ -345,6 +375,7 @@ def main():
         "Woodcutting": WoodcuttingFormatter,
         "Cooking": CookingFormatter,
         "Dexterity": DexterityFormatter,
+        "Mining": MiningFormatter,
     }
 
     for [supported_skill, formatter] in supported_skills.items():
