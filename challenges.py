@@ -441,6 +441,59 @@ def print_challenges_for_skill(challenges: list[Challenge], skill: str, formatte
         out += "|}\n"
     print(out)
 
+def print_experience_challenges(challenges: list[Challenge]) -> None:
+    filtered = [challenge for challenge in challenges if challenge.challenge_type == "Experience"]
+
+    out = f"=== Experience ===\n"
+    header_cells = ["Skill", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+    out += f"""
+==== Skills ====
+These challenges are progressed by gaining experience with the skill listed in the challenge.
+{{| class="mw-collapsible mw-collapsed wikitable"
+|-
+"""
+    out += "! " + "!! ".join([cell + " " for cell in header_cells]) + "\n"
+    out += "|-\n"
+
+    grouped_by_id: dict[str, list[Challenge]] = {}
+    for x in filtered:
+        if x.challenge_id not in grouped_by_id:
+            grouped_by_id[x.challenge_id] = []
+        grouped_by_id[x.challenge_id].append(x)
+
+    skill_overrides = {
+        "BowCrafting": "Bowcrafting",
+        "Ranged": "Range",
+        "SoulBinding": "Soulbinding",
+    }
+
+    rows = []
+    for by_id in grouped_by_id.values():
+        skill_name = by_id[0].skill
+        if skill_name in skill_overrides:
+            skill_name = skill_overrides[skill_name]
+
+        if skill_name == "Total":
+            cells = [skill_name] # no image for "Total" as there's none available on the wiki
+        else:
+            cells = [format_image_cell(skill_name)]
+
+        for challenge in by_id:
+            cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
+
+        if by_id[0].repeatable:
+            cells.append("Yes")
+        else:
+            cells.append("No")
+
+        rows.append(cells)
+
+    for cells in rows:
+        out += "| " + "|| ".join([cell + " " for cell in cells]) + "\n"
+        out += "|-\n"
+    out += "|}\n"
+    print(out)
+
 def print_challenge(challenge: Challenge) -> None:
     print(f"Category: {challenge.category}")
     print(f"Challenge Name: {challenge.challenge_name}")
@@ -467,29 +520,10 @@ def main():
     print(f"\nTotal challenges loaded: {len(challenges)}")
 
     supported_skills = {
-        "Woodcutting": WoodcuttingFormatter,
-        "Cooking": lambda: ResourceFormatter(
-            {
-                "Fish": "These challenges are progressed by successfully cooking the fish listed in the challenge.",
-                "Meat": "These challenges are progressed by successfully cooking the meat listed in the challenge.",
-                "Other": "These challenges are progressed by successfully cooking the food listed in the challenge.",
-            },
-            {
-                "Fish": "Fish",
-                "Meat": "Meat",
-                "Other": "Food",
-            },
-            {
-                "Chicken": "Chicken (Food)",
-            },
-        ),
+        "Hitpoints": lambda: SimpleFormatter({"Healing": "These challenges are progressed by restoring Health."}),
         "Dexterity": DexterityFormatter,
         "Mining": lambda: ResourceFormatter({"Ores": "These challenges are progressed by successfully mining the ore listed in the challenge."}, {"Ores": "Ore"}),
-        "Hitpoints": lambda: SimpleFormatter({"Healing": "These challenges are progressed by restoring Health."}),
         "Attack": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a melee attack."}),
-        "Strength": lambda: SimpleFormatter({"Damage": "These challenges are progressed by successfully dealing damage to enemies with a melee attack."}),
-        "Defence": lambda: SimpleFormatter({"Mitigation": "These challenges are progressed by successfully recuding damage from enemies."}),
-        "Ranged": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a ranged attack.", "Damage": "These challenges are progressed by successfully dealing damage to enemies with a ranged attack."}),
         "Foraging": lambda: ResourceFormatter({"Forage": "These challenges are progressed by successfully foraging the resource listed in the challenge."}, {"Forage": "Resource"}),
         "Smithing": lambda: ResourceFormatter(
             {
@@ -507,6 +541,7 @@ def main():
                 "Other": "Other",
             },
         ),
+        "Strength": lambda: SimpleFormatter({"Damage": "These challenges are progressed by successfully dealing damage to enemies with a melee attack."}),
         "Herbology": lambda: ResourceFormatter(
             {
                 "Unfinished": "These challenges are progressed by successfully creating the unfinished potion listed in the challenge.",
@@ -524,6 +559,7 @@ def main():
             },
         ),
         "Fishing": lambda: ResourceFormatter({"Fish": "These challenges are progressed by successfully fishing the fish listed in the challenge."}, {"Fish": "Potion"}),
+        "Defence": lambda: SimpleFormatter({"Mitigation": "These challenges are progressed by successfully recuding damage from enemies."}),
         "Crafting": lambda: ResourceFormatter(
             {
                 "Workbench": "These challenges are progressed by successfully crafting the item listed in the challenge.",
@@ -551,6 +587,22 @@ def main():
                 "Cape Of Ironfang": "Cape of Ironfang",
             },
         ),
+        "Cooking": lambda: ResourceFormatter(
+            {
+                "Fish": "These challenges are progressed by successfully cooking the fish listed in the challenge.",
+                "Meat": "These challenges are progressed by successfully cooking the meat listed in the challenge.",
+                "Other": "These challenges are progressed by successfully cooking the food listed in the challenge.",
+            },
+            {
+                "Fish": "Fish",
+                "Meat": "Meat",
+                "Other": "Food",
+            },
+            {
+                "Chicken": "Chicken (Food)",
+            },
+        ),
+        "Ranged": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a ranged attack.", "Damage": "These challenges are progressed by successfully dealing damage to enemies with a ranged attack."}),
         "BowCrafting": lambda: ResourceFormatter(
             {
                 "Arrows": "These challenges are progressed by successfully crafting the arrows listed in the challenge.",
@@ -563,6 +615,7 @@ def main():
                 "Shafts": "Shaft",
             },
         ),
+        "Woodcutting": WoodcuttingFormatter,
         "Magic": lambda: SimpleFormatter({"Accuracy": "These challenges are progressed by successfully hitting an enemy with a magic attack.", "Damage": "These challenges are progressed by successfully dealing damage to enemies with a magic attack.", "Teleports": "These challenges are progressed by teleporting to the location listed in the challenge."}),
         "Imbuing": lambda: ResourceFormatter(
             {
@@ -707,7 +760,7 @@ def main():
 
     for [supported_skill, formatter] in supported_skills.items():
         print_challenges_for_skill(challenges, supported_skill, formatter())
-
+    print_experience_challenges(challenges)
 
 if __name__ == "__main__":
     main()
