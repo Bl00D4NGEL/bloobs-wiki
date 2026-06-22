@@ -42,30 +42,6 @@ def read_challenges_csv(filename: str) -> list[Challenge]:
     
     return challenges
 
-def print_categories(challenges: list[Challenge]) -> None:
-    """
-    Print all unique categories from the challenges list.
-    """
-    categories = set(challenge.category for challenge in challenges)
-    
-    print("All Categories:")
-    print("-" * 40)
-    for category in sorted(categories):
-        print(f"• {category}")
-    print(f"\nTotal categories found: {len(categories)}")
-
-def print_skills(challenges: list[Challenge]) -> None:
-    """
-    Print all unique skills from the challenges list.
-    """
-    skills = set(challenge.skill for challenge in challenges)
-    
-    print("All Skills:")
-    print("-" * 40)
-    for category in sorted(skills):
-        print(f"• {category}")
-    print(f"\nTotal skills found: {len(skills)}")
-
 def format_image_cell(content: str, image_link: str| None = None, linkable_content: bool = True) -> str:
     if image_link is None:
         image_link = content
@@ -131,7 +107,7 @@ class ResourceFormatter(SkillFormatter):
         return self._descriptions[category]
 
     def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
-        return ["Required Level", self._resource_names[category], "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+        return ["Required Level", self._resource_names[category], "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Total"]
 
     def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
         rows = []
@@ -148,13 +124,7 @@ class ResourceFormatter(SkillFormatter):
             else:
                 cells.append(format_image_cell(resource_name))
 
-            for challenge in by_id:
-                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-            if by_id[0].repeatable:
-                cells.append("Yes")
-            else:
-                cells.append("No")
+            cells.extend(get_challenge_cells(by_id))
 
             rows.append(cells)
 
@@ -174,20 +144,14 @@ class SimpleFormatter(SkillFormatter):
         return self._descriptions[category]
 
     def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
-        return ["Required Level", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+        return ["Required Level", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Total"]
 
     def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
         rows = []
 
         for by_id in challenges_by_id.values():
             cells = [f"Level {by_id[0].level_required}"]
-            for challenge in by_id:
-                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-            if by_id[0].repeatable:
-                cells.append("Yes")
-            else:
-                cells.append("No")
+            cells.extend(get_challenge_cells(by_id))
 
             rows.append(cells)
 
@@ -201,7 +165,7 @@ class WoodcuttingFormatter(SkillFormatter):
         return "These challenges are progressed by successfully chopping the log from the tree listed in the challenge."
 
     def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
-        return ["Required Level", "Tree", "Log", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+        return ["Required Level", "Tree", "Log", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Total"]
 
     def get_table_row_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[list[str]]:
         rows = []
@@ -238,14 +202,7 @@ class WoodcuttingFormatter(SkillFormatter):
                 cells.append("???")
 
             cells.append(format_image_cell(log_name))
-
-            for challenge in by_id:
-                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-            if by_id[0].repeatable:
-                cells.append("Yes")
-            else:
-                cells.append("No")
+            cells.extend(get_challenge_cells(by_id))
 
             rows.append(cells)
 
@@ -278,7 +235,7 @@ class HomesteadingFormatter(SkillFormatter):
                 "Woodcutting": "Tree",
         }
         if category in resource_names:
-            return ["Required Level", resource_names[category], "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+            return ["Required Level", resource_names[category], "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Total"]
 
         return []
 
@@ -319,13 +276,7 @@ class HomesteadingFormatter(SkillFormatter):
                     else:
                         cells.append(format_image_cell(challenge_name, None, False))
 
-            for challenge in by_id:
-                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-            if by_id[0].repeatable:
-                cells.append("Yes")
-            else:
-                cells.append("No")
+            cells.extend(get_challenge_cells(by_id))
 
             rows.append(cells)
 
@@ -347,9 +298,9 @@ class DexterityFormatter(SkillFormatter):
     def get_header_cells(self, category: str, challenges_by_id: dict[str, list[Challenge]]) -> list[str]:
         match category:
             case "Bloobathon":
-                return ["Required Level", "Bloobathon", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+                return ["Required Level", "Bloobathon", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Total"]
             case "Movement":
-                return ["Required Level", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+                return ["Required Level", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Total"]
             case _:
                 return []
 
@@ -374,14 +325,7 @@ class DexterityFormatter(SkillFormatter):
                 challenge_name = "Frostspire Cavern Bloobathon"
 
             cells.append(format_image_cell(challenge_name))
-
-            for challenge in by_id:
-                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-            if by_id[0].repeatable:
-                cells.append("Yes")
-            else:
-                cells.append("No")
+            cells.extend(get_challenge_cells(by_id))
 
             rows.append(cells)
 
@@ -392,13 +336,7 @@ class DexterityFormatter(SkillFormatter):
 
         for by_id in challenges_by_id.values():
             cells = [f"Level {by_id[0].level_required}"]
-            for challenge in by_id:
-                cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-            if by_id[0].repeatable:
-                cells.append("Yes")
-            else:
-                cells.append("No")
+            cells.extend(get_challenge_cells(by_id))
 
             rows.append(cells)
 
@@ -445,7 +383,7 @@ def print_experience_challenges(challenges: list[Challenge]) -> None:
     filtered = [challenge for challenge in challenges if challenge.challenge_type == "Experience"]
 
     out = f"=== Experience ===\n"
-    header_cells = ["Skill", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Repeatable"]
+    header_cells = ["Skill", "Tier 1", "Tier 2", "Tier 3", "Tier 4", "Tier 5", "Tier 6", "Tier 7", "Tier 8", "Tier 9", "Tier 10", "Total"]
     out += f"""
 ==== Skills ====
 These challenges are progressed by gaining experience with the skill listed in the challenge.
@@ -478,14 +416,7 @@ These challenges are progressed by gaining experience with the skill listed in t
         else:
             cells = [format_image_cell(skill_name)]
 
-        for challenge in by_id:
-            cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
-
-        if by_id[0].repeatable:
-            cells.append("Yes")
-        else:
-            cells.append("No")
-
+        cells.extend(get_challenge_cells(by_id))
         rows.append(cells)
 
     for cells in rows:
@@ -494,17 +425,18 @@ These challenges are progressed by gaining experience with the skill listed in t
     out += "|}\n"
     print(out)
 
-def print_challenge(challenge: Challenge) -> None:
-    print(f"Category: {challenge.category}")
-    print(f"Challenge Name: {challenge.challenge_name}")
-    print(f"Challenge ID: {challenge.challenge_id}")
-    print(f"Type: {challenge.challenge_type}")
-    print(f"Skill: {challenge.skill}")
-    print(f"Level Required: {challenge.level_required}")
-    print(f"Tier: {challenge.tier}")
-    print(f"Requirement Amount: {challenge.requirement_amount}")
-    print(f"Challenge Points: {challenge.challenge_points}")
-    print(f"Repeatable: {challenge.repeatable}")
+def get_challenge_cells(challenges: list[Challenge]) -> list[str]:
+    cells = []
+    required_amount_sum = 0
+    points_sum = 0
+    for challenge in challenges:
+        cells.append(f"{challenge.requirement_amount} ({challenge.challenge_points})")
+        required_amount_sum += challenge.requirement_amount
+        points_sum += challenge.challenge_points
+
+    cells.append(f"{required_amount_sum} ({points_sum})")
+
+    return cells
 
 def main():
     filename = "challenges.csv"
@@ -528,10 +460,10 @@ def main():
         "Smithing": lambda: ResourceFormatter(
             {
                 "Bars": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
-                "Tools": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
-                "Weapons": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
-                "Armour": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
-                "Other": "These challenges are progressed by successfully smelting the bar listed in the challenge.",
+                "Tools": "These challenges are progressed by successfully smithing the tool listed in the challenge.",
+                "Weapons": "These challenges are progressed by successfully smelting the weapon listed in the challenge.",
+                "Armour": "These challenges are progressed by successfully smelting the amour listed in the challenge.",
+                "Other": "These challenges are progressed by successfully smelting the item listed in the challenge.",
             },
             {
                 "Bars": "Bar",
